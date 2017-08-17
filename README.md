@@ -1,8 +1,8 @@
-<h1>Setting up Autosyncing Fossil Repositories on macOS
+Setting up Autosyncing Fossil Repositories on macOS
 
-<h5>
+
 On master mac
-<h>
+
 On the main mac, initialize a Fossil repo. Make sure you are in your home directory (~) first (or wherever you want the checkout directory to be)
 
 * Fossilize -i _reponame_
@@ -29,7 +29,7 @@ Updating the repository with locally added files should be confirmed with
 * _fossil update_ - Gets latest version from server
 * _fossil commit (-m "Commit message")_ - Writes the changes to the repository and triggers an autosync.
 
-<h3>
+
 In remote mac
 <h>
 Best to keep cloned repositories in central location /Users/Shared/FOSSIL (like server) or possibly in ~/FOSSIL/
