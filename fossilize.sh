@@ -109,7 +109,7 @@ else
   gsed -i.bkp  '/targets = */ s/$/, fossil_'$checkout_dir'/' ~/.bugwarriorrc
   echo "" >> ~/.bugwarriorrc
   echo "[fossil_$checkout_dir]" >> ~/.bugwarriorrc
-  echo "service = fossil" >> bugwarriorrc
+  echo "service = fossil" >> ~/.bugwarriorrc
   echo "url = http://127.0.0.1:8888/$checkout_dir/" >> ~/.bugwarriorrc
   echo "username = $username" >> ~/.bugwarriorrc
   echo "password = $password" >> ~/.bugwarriorrc
