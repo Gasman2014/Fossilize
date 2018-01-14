@@ -8,25 +8,38 @@
 # repository in /Users/Shared/FOSSIL. Will automatically add all the files from the
 # checkout directory to the repository and perform an initial checkout.
 #
+# The script names the project after the repository name.
+#
+# The script was developed to facilitate standardised structures for KiCad projects.
+# Invoking the -k option generates a series of basic folders and files for
+# KiCad EDA prjects (Gerbers, Simulation Libraries etc). Invoking the -i option with
+# the -k option adds a 'KiCad' folder badge.
+#
 # Also appends information about the repository to the user's .bugwarriorrc file
 # to allow bugwarrior to scrape bug entries into Taskwarrior.
 #
 # NB Needs unsuported umonkey version of Bugwarrior.
 # https://github.com/FvD/bugwarrior/commit/ac985163c4c699059897aa0fc98f372fea768fcf
 #
+# Incorporates a folder 'badge' using SetFileIcon
+# (from http://www.hamsoftengineering.com/codeSharing/SetFileIcon/SetFileIcon.html)
+# The baseline icon needs to be stored in the DEFAULT_REPO directory. Use 'File2Icon'
+# to make this badged folder.
+#
+#
 # NB This script dumps a 'setup' file into the checkout with the repository detail
 # and password. This is a major security risk but simplifies setting up in the single
 # user scenario.
-
-
+#
+#
 # Usage:
-#       fossilize [-h] [-v] [-f] checkout_dir
-
+#       fossilize [-h] [-v] [-f] [-k] checkout_dir
+#
 # TODO Add option for alternative repository location.
 #  Add option of alternative checkout directory) i.e not in current directory.
 #  Default is to add all files in checkout directory and make an initial commit
 #  change to fossilize [-h][-v] [-c] checkout_dir [-r] alternative_repository_path?
-#  add option to exclude files in current directory
+#
 #
 OPTIND=1
 
@@ -38,6 +51,8 @@ DEFAULT_REPO=/Users/Shared/FOSSIL/
 checkout_dir=""
 repopath=$DEFAULT_REPO
 defaulticon=$DEFAULT_REPO/icon.png
+kicadicon=$DEFAULT_REPO/kicad1.png
+#kicadicon=$DEFAULT_REPO/kicad2.png
 icon=0
 
 function usage () {
@@ -46,13 +61,14 @@ Usage:  fossilize [OPTION] [FILE...]
         -h  displays basic help
         -v  displays version
         -i  adds fossil icon to checkout folder (requires FileIconSet)
-        -r  path to alternative repository (defaults if ommitted to /Users/Shared/FOSSIL)
+        -r  path to alternative repository (defaults if omitted to /Users/Shared/FOSSIL)
+        -k  Initialize baseline folders for Kicad project.
 
 EOF
   exit 0
 }
 
-while getopts ":hvi" opt; do
+while getopts ":hvik" opt; do
   case "$opt" in
     h)  usage
     ;;
@@ -66,6 +82,9 @@ while getopts ":hvi" opt; do
         echo "Setting an icon requires SetFileIcon in your path" 1>&2
         exit 1
       fi
+    ;;
+    k)  kicad=yes
+      echo "Kicad format repo : $kicad"
     ;;
     \?) echo "fossilize :  illegal option: $1" 1>&2
       echo "usage: fossilize [-hvi] checkout directory [-r] repository directory"
@@ -95,7 +114,11 @@ else
     mkdir $checkout_dir
   fi
   if [ $icon = yes ]; then
-    SetFileIcon -image $defaulticon -file $checkout_dir
+    if [ $kicad = yes ]; then
+     SetFileIcon -image $kicadicon -file $checkout_dir
+    else
+     SetFileIcon -image $defaulticon -file $checkout_dir
+    fi
   fi
 
   cd $checkout_dir
@@ -117,6 +140,33 @@ else
   echo "project_name = $checkout_dir" >> ~/.bugwarriorrc
   echo "default_priority = M" >> ~/.bugwarriorrc
 
+
+
+  if [ $kicad = yes ]; then
+      mkdir BOM
+      mkdir Rule_Checks
+      mkdir Code
+      mkdir Datasheets
+      mkdir Documentation
+      mkdir Mechanical_3D
+      mkdir Fabrication
+      mkdir Libraries
+      mkdir Plots
+      mkdir Renders
+      mkdir Simulation
+      mkdir Rule_Checks/ERC
+      mkdir Rule_Checks/DRC
+      mkdir Fabrication/Gerbers
+      mkdir Libraries/libraries
+      mkdir Libraries/modules
+      mkdir Libraries/3d_packages
+      cp $DEFAULT_REPO/bom.ini bom.ini
+      touch ReadMe.md
+      printf  > ReadMe.md "# Project: $checkout_dir\n##Wiki Home Page"
+      fossil sqlite 'insert or replace into config values ("index-page", "/doc/tip/ReadMe.md", now());' -R "$repopath$checkout_dir.fossil" >/dev/null
+  fi
+
+  fossil sqlite "insert or replace into config values ('project-name', '$checkout_dir', now() );" -R "$repopath$checkout_dir.fossil" >/dev/null
   fossil open $repopath$checkout_dir.fossil
   fossil add .
   fossil commit -m "$checkout_dir.fossil repository initialised by Fossilize"
