@@ -179,7 +179,7 @@ else
         touch Libraries/packages3D/Library_3D_Notes.txt
         cp $DEFAULT_REPO/bom.ini bom.ini
         touch ReadMe.md
-        printf  > ReadMe.md "<H1> Project: $checkout_dir </H1>\n<H2>Wiki Home Page</H2> \n <p>See https://www.fossil-scm.org/xfer/wiki_rules for formatting rules<p>"
+        printf  > ReadMe.md "<H1> Project: $checkout_dir </H1>\n<H2>Wiki Home Page</H2> \n <p>See [the wiki formatting rules](https://www.fossil-scm.org/xfer/wiki_rules)<p>"
         fossil sqlite 'insert or replace into config values ("index-page", "/doc/tip/ReadMe.md", now());' -R "$repopath$checkout_dir.fossil" >/dev/null
     fi
 
