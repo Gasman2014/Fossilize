@@ -44,7 +44,7 @@
 OPTIND=1
 
 # Default repository path and version number
-VERSION=0.1
+VERSION=0.2
 DEFAULT_REPO=/Users/Shared/FOSSIL/
 
 # Initialize our local variables:
@@ -184,7 +184,7 @@ else
     fi
 
     fossil sqlite "insert or replace into config values ('project-name', '$checkout_dir', now() );" -R "$repopath$checkout_dir.fossil" >/dev/null
-    fossil open $repopath$checkout_dir.fossil
+    fossil open $repopath$checkout_dir.fossil --force
     fossil add * --dotfiles
     fossil commit -m "$checkout_dir.fossil repository initialised by Fossilize"
     fossil branch new development trunk
