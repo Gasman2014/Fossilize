@@ -26,32 +26,35 @@
 # The baseline icon needs to be stored in the DEFAULT_REPO directory. Use 'File2Icon'
 # to make this badged folder.
 #
-#
 # NB This script dumps a 'setup' file into the checkout with the repository detail
 # and password. This is a major security risk but simplifies setting up in the single
 # user scenario.
-#
+# 
+# Changes 05.07.2021
+# SetFileIcon no longer seems supported and is non-functional. Equivilent functionality is available from
+# 'fileicon' which can be installed using 'brew' (brew install fileicon). This requires an xxx.icns file in the
+# root repository.
 #
 # Usage:
-#       fossilize [-h] [-v] [-f] [-k] checkout_dir
+#       fossilize [-h] [-v] [-f] [-k] [-i] checkout_dir
 #
 # TODO Add option for alternative repository location.
 #  Add option of alternative checkout directory) i.e not in current directory.
 #  Default is to add all files in checkout directory and make an initial commit
-#  change to fossilize [-h][-v] [-c] checkout_dir [-r] alternative_repository_path?
+#  change to fossilize [-h][-v][-k][-i][-c] checkout_dir [-r] alternative_repository_path?
 #
 #
 OPTIND=1
 
 # Default repository path and version number
-VERSION=0.2
+VERSION=0.3
 DEFAULT_REPO=/Users/Shared/FOSSIL/
 
 # Initialize our local variables:
 checkout_dir=""
 repopath=$DEFAULT_REPO
-defaulticon=$DEFAULT_REPO/icon.png
-kicadicon=$DEFAULT_REPO/kicad1.png
+defaulticon=$DEFAULT_REPO/FOSSIL.icns
+kicadicon=$DEFAULT_REPO/KICAD.icns
 #kicadicon=$DEFAULT_REPO/kicad2.png
 icon=0
 
@@ -76,10 +79,10 @@ while getopts ":hvik" opt; do
             echo "fossilize3 version : $version"
             exit 0
         ;;
-        i)  if hash SetFileIcon 2>/dev/null; then
+        i)  if hash fileicon 2>/dev/null; then
                 icon=yes
             else
-                echo "Setting an icon requires SetFileIcon in your path" 1>&2
+                echo "Setting an icon requires fileicon in your path (brew install fileicon)" 1>&2
                 exit 1
             fi
         ;;
@@ -113,11 +116,11 @@ else
     if [[ ! -d $checkout_dir ]]; then
         mkdir $checkout_dir
     fi
-    if [ $icon = yes ]; then
-        if [ $kicad = yes ]; then
-            SetFileIcon -image $kicadicon -file $checkout_dir
+    if [ "$icon" = "yes" ]; then
+        if [ "$kicad" = "yes" ]; then
+            fileicon set  $checkout_dir $kicadicon
         else
-            SetFileIcon -image $defaulticon -file $checkout_dir
+            fileicon set $checkout_dir $defaulticon
         fi
     fi
 
@@ -142,8 +145,11 @@ else
 
 
 
-    if [ $kicad = yes ]; then
-        mkdir BOM
+    if [ "$kicad" = "yes" ]; then
+	mkdir .fossil-settings
+	cp ~/.config/fossil/kicad-ignore-glob .fossil-settings/ignore-glob
+        touch .fossil-settings/ignore-glob.no-warn
+	mkdir BOM
         touch BOM/BOM_Notes.txt
         mkdir Rule_Checks
         touch Rule_Checks/Notes.txt
@@ -161,8 +167,8 @@ else
         touch Mechanical_3D/Notes.txt
         mkdir Fabrication
         touch Fabrication/Notes.txt
-        mkdir Libraries
-        touch Libraries/Library_Notes.txt
+        mkdir lib
+        touch lib/Library_Notes.txt
         mkdir Plots
         touch Plots/Plot_Notes.txt
         mkdir Renders
@@ -171,19 +177,19 @@ else
         touch Simulation/Simulation_Notes.txt
         mkdir Fabrication/Gerbers
         touch Fabrication/Gerbers/Gerber_Notes.txt
-        mkdir Libraries/symbols
-        touch Libraries/symbols/Library_symbols_Notes.txt
-        mkdir Libraries/footprints
-        touch Libraries/footprints/Library_footprints_Notes.txt
-        mkdir Libraries/packages3D
-        touch Libraries/packages3D/Library_3D_Notes.txt
+        mkdir lib/symbols
+        touch lib/symbols/Library_symbols_Notes.txt
+        mkdir lib/footprints
+        touch lib/footprints/Library_footprints_Notes.txt
+        mkdir lib/packages3D
+        touch lib/packages3D/Library_3D_Notes.txt
         cp $DEFAULT_REPO/bom.ini bom.ini
         touch ReadMe.md
         printf  > ReadMe.md "<H1> Project: $checkout_dir </H1>\n<H2>Wiki Home Page</H2> \n <p>See [the wiki formatting rules](https://www.fossil-scm.org/xfer/wiki_rules)<p>"
-        fossil sqlite 'insert or replace into config values ("index-page", "/doc/tip/ReadMe.md", now());' -R "$repopath$checkout_dir.fossil" >/dev/null
+        fossil sqlite "insert or replace into config values ('index-page', '/doc/tip/ReadMe.md', 'now');" -R "$repopath$checkout_dir.fossil" >/dev/null
     fi
 
-    fossil sqlite "insert or replace into config values ('project-name', '$checkout_dir', now() );" -R "$repopath$checkout_dir.fossil" >/dev/null
+    fossil sqlite "insert or replace into config values ('project-name', '$checkout_dir', 'now' );" -R "$repopath$checkout_dir.fossil" >/dev/null
     fossil open $repopath$checkout_dir.fossil --force
     fossil add * --dotfiles
     fossil commit -m "$checkout_dir.fossil repository initialised by Fossilize"
